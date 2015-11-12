@@ -11,7 +11,13 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    attribute = params[:sort_by]
+    if attribute
+      @movies = Movie.all.sort_by { |movie| movie.send(attribute.to_sym) }
+    else
+      @movies = Movie.all
+    end
+    @attribute = attribute
   end
 
   def new
@@ -41,5 +47,17 @@ class MoviesController < ApplicationController
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
   end
+  
+  def destroy
+    @movie = Movie.find(params[:id])
+    @movie.destroy
+    flash[:notice] = "Movie '#{@movie.title}' deleted."
+    redirect_to movies_path
+  end
 
+=begin
+  def sort
+    flash[:sort] = "movie-title"@movies = Movies.all.sort_by { |movie| movie.send(params[:by].to_sym) }
+  end
+=end
 end
