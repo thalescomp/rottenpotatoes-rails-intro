@@ -13,20 +13,21 @@ class MoviesController < ApplicationController
   def index
     @all_ratings = Movie.all_ratings
     @sort_by = params[:sort_by]
-    if @sort_by
-      @movies = Movie.all.sort_by { |movie| movie.send(@sort_by.to_sym) }
+    if @sort_by == "title" || @sort_by == "release_date"
+      @movies = Movie.order @sort_by
     else
       @movies = Movie.all
     end
     
-    @ratings = params[:ratings]
-    if @ratings
-      @movies = Movie.all.select { |m| @ratings[m.rating] }
-    end
+    @selected_ratings = params[:ratings] || {}
+    @all_ratings.each { |rating| @selected_ratings[rating] = 1 } if @selected_ratings.empty?
+    @movies =  @movies.where rating: @selected_ratings.keys
+
   end
 
   def new
     # default: render 'new' template
+    @all_ratings = Movie.all_ratings
   end
 
   def create
@@ -36,6 +37,7 @@ class MoviesController < ApplicationController
   end
 
   def edit
+    @all_ratings = Movie.all_ratings
     @movie = Movie.find params[:id]
   end
 
