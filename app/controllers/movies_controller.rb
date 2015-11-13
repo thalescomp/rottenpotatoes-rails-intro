@@ -11,13 +11,18 @@ class MoviesController < ApplicationController
   end
 
   def index
-    attribute = params[:sort_by]
-    if attribute
-      @movies = Movie.all.sort_by { |movie| movie.send(attribute.to_sym) }
+    @all_ratings = Movie.all_ratings
+    @sort_by = params[:sort_by]
+    if @sort_by
+      @movies = Movie.all.sort_by { |movie| movie.send(@sort_by.to_sym) }
     else
       @movies = Movie.all
     end
-    @attribute = attribute
+    
+    @ratings = params[:ratings]
+    if @ratings
+      @movies = Movie.all.select { |m| @ratings[m.rating] }
+    end
   end
 
   def new
