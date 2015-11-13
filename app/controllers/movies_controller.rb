@@ -10,19 +10,64 @@ class MoviesController < ApplicationController
     # will render app/views/movies/show.<extension> by default
   end
 
+=begin
+
+  def index_Adail
+    need_redirect = false
+    if params[:sort_by] =~ /\Atitle\z|\Arelease_date\z/
+      @sort_by = params[:sort_by]
+      session[:sort_by] = @sort_by
+    else
+      @sort_by = session[:sort_by]
+      need_redirect = true
+    end
+    @movies = Movie.order @sort_by
+    if params[:ratings]
+      if params[:ratings].is_a? Hash
+        @ratings = params[:ratings].keys
+      else
+        @ratings = params[:ratings]
+      end
+      session[:ratings] = @ratings
+    else
+      @ratings = session[:ratings] || Movie.ratings
+      need_redirect = true
+    end
+    if need_redirect && !session[:redirected]
+      session[:redirected] = true
+      flash.keep
+      ratings_hash = {}
+      @ratings.each { |r| ratings_hash[r] = 1 }
+      redirect_to movies_path sort_by: @sort_by, ratings: ratings_hash
+    else
+      session.delete :redirected
+      @movies = @movies.where rating: @ratings
+      @all_ratings = Movie.ratings
+    end
+  end
+=end
+
+
   def index
     @all_ratings = Movie.all_ratings
     @sort_by = params[:sort_by]
-    if @sort_by == "title" || @sort_by == "release_date"
+    if %w(title release_date).include? @sort_by
       @movies = Movie.order @sort_by
-    else
-      @movies = Movie.all
+      session[:sort_by] = @sort_by
+    elsif %w(title release_date).include? session[:sort_by]
+      @sort_by = session[:sort_by]
     end
+    @movies = Movie.order @sort_by
     
-    @selected_ratings = params[:ratings] || {}
+    @selected_ratings = params[:ratings] || session[:ratings] || {}
     @all_ratings.each { |rating| @selected_ratings[rating] = 1 } if @selected_ratings.empty?
     @movies =  @movies.where rating: @selected_ratings.keys
-
+    session[:ratings] = @selected_ratings
+    
+    if params[:ratings].nil?
+      flash.keep
+      redirect_to movies_path sort_by: session[:sort_by], ratings: session[:ratings]
+    end
   end
 
   def new
